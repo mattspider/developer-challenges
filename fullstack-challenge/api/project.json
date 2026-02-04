@@ -1,0 +1,60 @@
+{
+  "name": "api",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "api/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/api",
+        "main": "api/src/main.ts",
+        "tsConfig": "api/tsconfig.app.json"
+      },
+      "configurations": {
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "api:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "api:build:production"
+        }
+      }
+    },
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma generate --schema=api/prisma/schema.prisma",
+        "cwd": "."
+      }
+    },
+    "prisma-migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate dev",
+        "cwd": "api"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "api/jest.config.ts"
+      }
+    },
+    "prisma-seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma db seed",
+        "cwd": "api"
+      }
+    }
+  }
+}
