@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../services/api';
-import type { Usuario } from '../tipos';
+import type { Usuario } from '../types';
 
 interface EstadoAuth {
   usuario: Usuario | null;

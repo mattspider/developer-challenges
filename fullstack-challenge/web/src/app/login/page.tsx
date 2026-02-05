@@ -8,7 +8,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { fazerLogin } from '../../store/authSlice';
 import { RootState, AppDispatch } from '../../store';
-import { useTema } from '../../contexto/TemaContext';
+import { useTema } from '../../context/TemaContext';
 import { useState } from 'react';
 
 export default function LoginPage() {

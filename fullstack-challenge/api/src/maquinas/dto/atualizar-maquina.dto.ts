@@ -1,11 +1,12 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { TipoMaquina } from '@prisma/client';
 
 export class AtualizarMaquinaDto {
   @IsString()
   @IsOptional()
   nome?: string;
 
-  @IsEnum(['Pump', 'Fan'])
+  @IsEnum(TipoMaquina)
   @IsOptional()
-  tipo?: string;
+  tipo?: TipoMaquina;
 }

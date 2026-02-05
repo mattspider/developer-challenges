@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { TipoMaquina } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CriarMaquinaDto } from './dto/criar-maquina.dto';
@@ -8,11 +8,28 @@ import { AtualizarMaquinaDto } from './dto/atualizar-maquina.dto';
 export class MaquinasService {
   constructor(private prisma: PrismaService) {}
 
-  async listar(usuarioId: string) {
-    return this.prisma.maquina.findMany({
-      where: { usuarioId },
-      include: { pontosMonitoramento: true },
-    });
+  async listar(
+    usuarioId: string,
+    pagina: number = 1,
+    limite: number = 10
+  ) {
+    const skip = (pagina - 1) * limite;
+    const where = { usuarioId };
+    const [itens, total] = await Promise.all([
+      this.prisma.maquina.findMany({
+        where,
+        skip,
+        take: limite,
+        include: { pontosMonitoramento: true },
+      }),
+      this.prisma.maquina.count({ where }),
+    ]);
+    return {
+      itens,
+      total,
+      pagina,
+      totalPaginas: Math.ceil(total / limite),
+    };
   }
 
   async buscarPorId(id: string, usuarioId: string) {
@@ -30,35 +47,43 @@ export class MaquinasService {
     return this.prisma.maquina.create({
       data: {
         nome: dto.nome,
-        tipo: dto.tipo as TipoMaquina,
+        tipo: dto.tipo,
         usuarioId,
       },
     });
   }
 
   async atualizar(id: string, usuarioId: string, dto: AtualizarMaquinaDto) {
-    await this.buscarPorId(id, usuarioId);
-    return this.prisma.maquina.update({
-      where: { id },
-      data: {
-        ...(dto.nome && { nome: dto.nome }),
-        ...(dto.tipo && { tipo: dto.tipo as TipoMaquina }),
-      },
-    });
+    try {
+      const atualizado = await this.prisma.maquina.update({
+        where: { id, usuarioId },
+        data: {
+          ...(dto.nome && { nome: dto.nome }),
+          ...(dto.tipo && { tipo: dto.tipo }),
+        },
+      });
+      return atualizado;
+    } catch {
+      throw new NotFoundException('Maquina nao encontrada');
+    }
   }
 
   async deletar(id: string, usuarioId: string) {
-    await this.buscarPorId(id, usuarioId);
-    return this.prisma.maquina.delete({ where: { id } });
+    try {
+      return await this.prisma.maquina.delete({
+        where: { id, usuarioId },
+      });
+    } catch {
+      throw new NotFoundException('Maquina nao encontrada');
+    }
   }
 
   async verificarPropriedade(maquinaId: string, usuarioId: string) {
-    const maquina = await this.prisma.maquina.findFirst({
+    const count = await this.prisma.maquina.count({
       where: { id: maquinaId, usuarioId },
     });
-    if (!maquina) {
-      throw new ForbiddenException('Acesso negado');
+    if (count === 0) {
+      throw new NotFoundException('Maquina nao encontrada');
     }
-    return maquina;
   }
 }

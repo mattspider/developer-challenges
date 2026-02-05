@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsuarioAtual } from '../auth/usuario.decorator';
 import { MaquinasService } from './maquinas.service';
@@ -11,8 +11,16 @@ export class MaquinasController {
   constructor(private maquinasService: MaquinasService) {}
 
   @Get()
-  listar(@UsuarioAtual() usuario: { id: string }) {
-    return this.maquinasService.listar(usuario.id);
+  listar(
+    @UsuarioAtual() usuario: { id: string },
+    @Query('pagina') pagina?: string,
+    @Query('limite') limite?: string
+  ) {
+    return this.maquinasService.listar(
+      usuario.id,
+      pagina ? parseInt(pagina, 10) : 1,
+      limite ? parseInt(limite, 10) : 10
+    );
   }
 
   @Get(':id')

@@ -6,6 +6,15 @@ import maquinasReducer, {
 } from './maquinasSlice';
 
 describe('maquinasSlice', () => {
+  const estadoInicialSlice = {
+    lista: [],
+    total: 0,
+    pagina: 1,
+    totalPaginas: 0,
+    carregando: false,
+    erro: null,
+  };
+
   const maquina1 = {
     id: 'maq-1',
     nome: 'Maquina 1',
@@ -19,19 +28,31 @@ describe('maquinasSlice', () => {
     usuarioId: 'user-1',
   };
 
-  it('buscarMaquinas.fulfilled atualiza lista', () => {
+  it('buscarMaquinas.fulfilled atualiza lista e paginacao', () => {
     const lista = [maquina1, maquina2];
+    const payload = {
+      itens: lista,
+      total: 2,
+      pagina: 1,
+      totalPaginas: 1,
+    };
     const resultado = maquinasReducer(
-      { lista: [], carregando: true, erro: null },
-      buscarMaquinas.fulfilled(lista, 'requestId')
+      { ...estadoInicialSlice, carregando: true },
+      buscarMaquinas.fulfilled(payload, 'requestId')
     );
     expect(resultado.lista).toEqual(lista);
+    expect(resultado.total).toBe(2);
+    expect(resultado.pagina).toBe(1);
+    expect(resultado.totalPaginas).toBe(1);
     expect(resultado.carregando).toBe(false);
     expect(resultado.erro).toBeNull();
   });
 
   it('criarMaquina.fulfilled adiciona item na lista', () => {
-    const estadoInicial = { lista: [maquina1], carregando: false, erro: null };
+    const estadoInicial = {
+      ...estadoInicialSlice,
+      lista: [maquina1],
+    };
     const novaMaquina = {
       id: 'maq-nova',
       nome: 'Nova',
@@ -48,9 +69,8 @@ describe('maquinasSlice', () => {
 
   it('atualizarMaquina.fulfilled atualiza item na lista', () => {
     const estadoInicial = {
+      ...estadoInicialSlice,
       lista: [maquina1, maquina2],
-      carregando: false,
-      erro: null,
     };
     const maquinaAtualizada = {
       ...maquina1,
@@ -70,9 +90,8 @@ describe('maquinasSlice', () => {
 
   it('deletarMaquina.fulfilled remove item da lista', () => {
     const estadoInicial = {
+      ...estadoInicialSlice,
       lista: [maquina1, maquina2],
-      carregando: false,
-      erro: null,
     };
     const resultado = maquinasReducer(
       estadoInicial,

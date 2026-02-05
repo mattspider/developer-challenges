@@ -24,7 +24,7 @@ import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturi
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import { fazerLogout } from '../store/authSlice';
 import { RootState } from '../store';
-import { useTema } from '../contexto/TemaContext';
+import { useTema } from '../context/TemaContext';
 import { useState } from 'react';
 
 const larguraDrawer = 260;
@@ -40,7 +40,7 @@ export function LayoutPrincipal({ children }: { children: React.ReactNode }) {
 
   const itens = [
     { texto: 'Maquinas', rota: '/maquinas', icone: <PrecisionManufacturingIcon /> },
-    { texto: 'Pontos de Monitoramento', rota: '/pontos-monitoramento', icone: <ShowChartIcon /> },
+    { texto: 'Pontos de Monitoramento', rota: '/monitoring-points', icone: <ShowChartIcon /> },
   ];
 
   const handleLogout = () => {
@@ -116,7 +116,7 @@ export function LayoutPrincipal({ children }: { children: React.ReactNode }) {
           {itens.map((item) => (
             <ListItem key={item.rota} disablePadding>
               <ListItemButton
-                selected={pathname === item.rota}
+                selected={pathname === item.rota || pathname.startsWith(item.rota + '/')}
                 onClick={() => {
                   router.push(item.rota);
                   setAberto(false);
@@ -155,7 +155,7 @@ export function LayoutPrincipal({ children }: { children: React.ReactNode }) {
           {itens.map((item) => (
             <ListItem key={item.rota} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
-                selected={pathname === item.rota}
+                selected={pathname === item.rota || pathname.startsWith(item.rota + '/')}
                 onClick={() => router.push(item.rota)}
                 sx={{ borderRadius: 2, py: 1.5 }}
               >

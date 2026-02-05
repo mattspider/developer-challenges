@@ -15,6 +15,8 @@ describe('PontosMonitoramentoService', () => {
       findMany: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
     sensor: {
       findUnique: jest.fn(),
@@ -188,6 +190,68 @@ describe('PontosMonitoramentoService', () => {
     expect(mockPrisma.sensor.create).toHaveBeenCalled();
   });
 
+  describe('atualizar', () => {
+    it('atualiza nome do ponto apos verificar propriedade', async () => {
+      mockPrisma.pontoMonitoramento.findFirst.mockResolvedValue({
+        id: 'ponto-1',
+        maquinaId: 'maq-1',
+        maquina: { tipo: 'Fan' },
+      });
+      mockMaquinasService.verificarPropriedade.mockResolvedValue({});
+      mockPrisma.pontoMonitoramento.update.mockResolvedValue({
+        id: 'ponto-1',
+        nome: 'Ponto Atualizado',
+      });
+
+      const resultado = await service.atualizar('ponto-1', 'user-1', {
+        nome: 'Ponto Atualizado',
+      });
+
+      expect(resultado.nome).toBe('Ponto Atualizado');
+      expect(mockMaquinasService.verificarPropriedade).toHaveBeenCalledWith(
+        'maq-1',
+        'user-1'
+      );
+      expect(mockPrisma.pontoMonitoramento.update).toHaveBeenCalledWith({
+        where: { id: 'ponto-1' },
+        data: { nome: 'Ponto Atualizado' },
+      });
+    });
+
+    it('lanca NotFoundException quando ponto nao existe', async () => {
+      mockPrisma.pontoMonitoramento.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.atualizar('ponto-inexistente', 'user-1', { nome: 'Novo' })
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('deletar', () => {
+    it('deleta ponto apos verificar propriedade', async () => {
+      mockPrisma.pontoMonitoramento.findFirst.mockResolvedValue({
+        id: 'ponto-1',
+        maquinaId: 'maq-1',
+      });
+      mockMaquinasService.verificarPropriedade.mockResolvedValue({});
+      mockPrisma.pontoMonitoramento.delete.mockResolvedValue({ id: 'ponto-1' });
+
+      await service.deletar('ponto-1', 'user-1');
+
+      expect(mockPrisma.pontoMonitoramento.delete).toHaveBeenCalledWith({
+        where: { id: 'ponto-1' },
+      });
+    });
+
+    it('lanca NotFoundException quando ponto nao existe', async () => {
+      mockPrisma.pontoMonitoramento.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.deletar('ponto-inexistente', 'user-1')
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('listar', () => {
     it('retorna itens paginados com formato correto', async () => {
       const itensDb = [
@@ -224,7 +288,7 @@ describe('PontosMonitoramentoService', () => {
           take: 5,
           include: {
             maquina: true,
-            sensores: { take: 1 },
+            sensores: true,
           },
         })
       );
@@ -254,6 +318,41 @@ describe('PontosMonitoramentoService', () => {
           orderBy: { maquina: { tipo: 'asc' } },
         })
       );
+    });
+
+    it('exibe HF+ para maquina Pump e todos os modelos para Fan', async () => {
+      const itensDb = [
+        {
+          id: 'p1',
+          nome: 'Ponto Pump',
+          maquina: { nome: 'Maq Pump', tipo: 'Pump' },
+          sensores: [{ modelo: 'HFPlus' }],
+        },
+        {
+          id: 'p2',
+          nome: 'Ponto Fan',
+          maquina: { nome: 'Maq Fan', tipo: 'Fan' },
+          sensores: [
+            { modelo: 'TcAg' },
+            { modelo: 'TcAs' },
+            { modelo: 'HFPlus' },
+          ],
+        },
+        {
+          id: 'p3',
+          nome: 'Ponto Pump sem sensor',
+          maquina: { nome: 'Maq Pump 2', tipo: 'Pump' },
+          sensores: [],
+        },
+      ];
+      mockPrisma.pontoMonitoramento.findMany.mockResolvedValue(itensDb);
+      mockPrisma.pontoMonitoramento.count.mockResolvedValue(3);
+
+      const resultado = await service.listar('user-1', 1, 5);
+
+      expect(resultado.itens[0].modeloSensor).toBe('HF+');
+      expect(resultado.itens[1].modeloSensor).toBe('TcAg, TcAs, HF+');
+      expect(resultado.itens[2].modeloSensor).toBeNull();
     });
   });
 });

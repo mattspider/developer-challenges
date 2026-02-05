@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { TemaProvider, useTema } from '../contexto/TemaContext';
+import { TemaProvider, useTema } from '../context/TemaContext';
 
 function TemaInterno({ children }: { children: React.ReactNode }) {
   const { modo } = useTema();

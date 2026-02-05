@@ -1,22 +1,40 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../services/api';
-import type { Maquina } from '../tipos';
+import type { Maquina } from '../types';
+
+interface RespostaMaquinas {
+  itens: Maquina[];
+  total: number;
+  pagina: number;
+  totalPaginas: number;
+}
 
 interface EstadoMaquinas {
   lista: Maquina[];
+  total: number;
+  pagina: number;
+  totalPaginas: number;
   carregando: boolean;
   erro: string | null;
 }
 
 const estadoInicial: EstadoMaquinas = {
   lista: [],
+  total: 0,
+  pagina: 1,
+  totalPaginas: 0,
   carregando: false,
   erro: null,
 };
 
 export const buscarMaquinas = createAsyncThunk(
   'maquinas/buscar',
-  async () => api.get<Maquina[]>('/maquinas')
+  async (params?: { pagina?: number; limite?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.pagina) qs.set('pagina', String(params.pagina));
+    if (params?.limite) qs.set('limite', String(params.limite));
+    return api.get<RespostaMaquinas>(`/maquinas?${qs}`);
+  }
 );
 
 export const criarMaquina = createAsyncThunk(
@@ -57,7 +75,10 @@ const maquinasSlice = createSlice({
       })
       .addCase(buscarMaquinas.fulfilled, (state, action) => {
         state.carregando = false;
-        state.lista = action.payload;
+        state.lista = action.payload.itens;
+        state.total = action.payload.total;
+        state.pagina = action.payload.pagina;
+        state.totalPaginas = action.payload.totalPaginas;
         state.erro = null;
       })
       .addCase(buscarMaquinas.rejected, (state, action) => {

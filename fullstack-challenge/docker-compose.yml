@@ -9,6 +9,39 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dynapredict -d dynapredict"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "3333:3333"
+    environment:
+      DATABASE_URL: postgresql://dynapredict:dynapredict@postgres:5432/dynapredict
+      DIRECT_URL: postgresql://dynapredict:dynapredict@postgres:5432/dynapredict
+      JWT_SECRET: dynapredict-secret
+      PORTA: 3333
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3333
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3333
+    depends_on:
+      - api
 
 volumes:
   postgres_data:

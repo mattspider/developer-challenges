@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MaquinasService } from '../maquinas/maquinas.service';
 import { CriarPontoDto } from './dto/criar-ponto.dto';
 import { CriarSensorDto } from './dto/criar-sensor.dto';
+import { AtualizarPontoDto } from './dto/atualizar-ponto.dto';
 
 const modeloParaPrisma: Record<string, ModeloSensor> = {
   TcAg: 'TcAg',
@@ -45,20 +46,33 @@ export class PontosMonitoramentoService {
         take: limite,
         include: {
           maquina: true,
-          sensores: { take: 1 },
+          sensores: true,
         },
         orderBy,
       }),
       this.prisma.pontoMonitoramento.count({ where }),
     ]);
 
-    const itensFormatados = itens.map((p) => ({
-      id: p.id,
-      nomePonto: p.nome,
-      nomeMaquina: p.maquina.nome,
-      tipoMaquina: p.maquina.tipo,
-      modeloSensor: p.sensores[0] ? this.prismaParaModelo(p.sensores[0].modelo) : null,
-    }));
+    const itensFormatados = itens.map((p) => {
+      const modelosUnicos = [
+        ...new Set(
+          p.sensores.map((s) => this.prismaParaModelo(s.modelo))
+        ),
+      ];
+      const modeloSensor =
+        p.maquina.tipo === 'Pump'
+          ? (p.sensores.length ? 'HF+' : null)
+          : modelosUnicos.length
+            ? modelosUnicos.join(', ')
+            : null;
+      return {
+        id: p.id,
+        nomePonto: p.nome,
+        nomeMaquina: p.maquina.nome,
+        tipoMaquina: p.maquina.tipo,
+        modeloSensor,
+      };
+    });
 
     return {
       itens: itensFormatados,
@@ -81,6 +95,34 @@ export class PontosMonitoramentoService {
   private prismaParaModelo(modelo: ModeloSensor): string {
     if (modelo === 'HFPlus') return 'HF+';
     return modelo;
+  }
+
+  async atualizar(pontoId: string, usuarioId: string, dto: AtualizarPontoDto) {
+    const ponto = await this.prisma.pontoMonitoramento.findFirst({
+      where: { id: pontoId },
+      include: { maquina: true },
+    });
+    if (!ponto) {
+      throw new NotFoundException('Ponto de monitoramento nao encontrado');
+    }
+    await this.maquinasService.verificarPropriedade(ponto.maquinaId, usuarioId);
+    return this.prisma.pontoMonitoramento.update({
+      where: { id: pontoId },
+      data: { ...(dto.nome && { nome: dto.nome }) },
+    });
+  }
+
+  async deletar(pontoId: string, usuarioId: string) {
+    const ponto = await this.prisma.pontoMonitoramento.findFirst({
+      where: { id: pontoId },
+    });
+    if (!ponto) {
+      throw new NotFoundException('Ponto de monitoramento nao encontrado');
+    }
+    await this.maquinasService.verificarPropriedade(ponto.maquinaId, usuarioId);
+    return this.prisma.pontoMonitoramento.delete({
+      where: { id: pontoId },
+    });
   }
 
   async associarSensor(pontoId: string, usuarioId: string, dto: CriarSensorDto) {

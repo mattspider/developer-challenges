@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../services/api';
-import type { RespostaPontos } from '../tipos';
+import type { RespostaPontos } from '../types';
 
 interface EstadoPontos {
   itens: RespostaPontos['itens'];
@@ -48,6 +48,17 @@ export const associarSensor = createAsyncThunk(
     identificadorUnico: string;
     modelo: string;
   }) => api.post(`/pontos/${pontoId}/sensores`, { identificadorUnico, modelo })
+);
+
+export const atualizarPonto = createAsyncThunk(
+  'pontos/atualizar',
+  async ({ pontoId, nome }: { pontoId: string; nome: string }) =>
+    api.patch(`/pontos/${pontoId}`, { nome })
+);
+
+export const deletarPonto = createAsyncThunk(
+  'pontos/deletar',
+  async (pontoId: string) => api.delete(`/pontos/${pontoId}`)
 );
 
 const pontosSlice = createSlice({
