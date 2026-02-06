@@ -1,6 +1,6 @@
 {
-    "buildCommand": "npx nx build web --verbose",
-    "outputDirectory": "web/.next",
-    "installCommand": "npm ci || npm install",
-    "framework": "nextjs"
+    "buildCommand": "npx nx build web --prod",
+    "outputDirectory": "dist/apps/web/.next",
+    "framework": null,
+    "installCommand": "npm install"
   }
