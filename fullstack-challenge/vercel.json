@@ -1,6 +1,6 @@
 {
     "buildCommand": "npx nx build web --prod",
-    "outputDirectory": "dist/apps/web/.next",
+    "outputDirectory": "web/.next",
     "framework": null,
     "installCommand": "npm install"
   }
