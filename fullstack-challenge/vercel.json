@@ -1,5 +1,5 @@
 {
-    "buildCommand": "npm run build:web",
+    "buildCommand": "npx nx build web --verbose",
     "outputDirectory": "web/.next",
     "installCommand": "npm ci || npm install",
     "framework": "nextjs"
