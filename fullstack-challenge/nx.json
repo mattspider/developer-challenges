@@ -15,7 +15,11 @@
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static",
         "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
+        "watchDepsTargetName": "watch-deps",
+        "buildOptions": {
+          "debug": true,
+          "verbose": true
+        }
       }
     },
     {
