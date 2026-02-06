@@ -1,5 +1,5 @@
 {
-    "buildCommand": "npm run build",
+    "buildCommand": "npm run build:web",
     "outputDirectory": "web/.next",
     "installCommand": "npm ci || npm install",
     "framework": "nextjs"
